@@ -1,0 +1,45 @@
+*, *:after, *:before
+  box-sizing: border-box
+
+html
+  position: relative
+  min-height: 100%
+
+html, body
+  margin: 0
+  padding: 0
+
+body
+  background: #f1f1f1
+  color: #333
+  font-family: Helvetica, Arial, sans-serif
+  font-size: 14px
+  line-height: 23px
+  font-weight: 300
+  vertical-align: baseline
+  -webkit-font-smoothing: antialiased
+  -moz-osx-font-smoothing: grayscale
+  text-size-adjust: 100%
+  cursor: default
+  user-select: none
+
+canvas
+  display: block
+
+status
+  display: block
+  position: absolute
+  width: 600px
+  left: 50%
+  top: 50%
+  margin-top: -80px
+  margin-left: -300px
+  padding: 20px 50px
+  background: rgba(230, 230, 230, .5)
+  color: #162945
+  font-size: 36px
+  line-height: 58px
+  text-align: center
+  border-radius: 5px
+  opacity: 0
+  transition: opacity ease-out .15s
