@@ -34,9 +34,10 @@ class Input {
   }
   onMouseWheel({ wheelDelta }) {
     const { renderer } = this;
-    const { scale } = renderer;
+    const { center, scale, render3D } = renderer;
     const step = wheelDelta > 0 ? 0.5 : 2;
     renderer.setScale(Math.min(Math.max(scale * step, 0.000001), 0.0001));
+    if (render3D) renderer.setCenter(center);
   }
   onKeyDown({ keyCode, repeat }) {
     const { renderer } = this;
@@ -44,6 +45,9 @@ class Input {
     switch (keyCode) {
       case 87: // W
         renderer.toggleWireframe();
+        break;
+      case 80: // P
+        renderer.toggle3D();
         break;
       default:
     }

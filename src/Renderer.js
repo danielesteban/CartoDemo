@@ -1,4 +1,4 @@
-import { mat4, vec2, vec3 } from 'gl-matrix';
+import { glMatrix, mat4, vec2, vec3 } from 'gl-matrix';
 import requestAnimationFrame from 'raf';
 import Input from './Input';
 import Shader from './Shader';
@@ -27,6 +27,7 @@ class Renderer {
     this.center = vec2.create();
     this.scale = 0.00001;
     this.renderWireframe = false;
+    this.render3D = false;
     this.meshes = [];
     window.addEventListener('resize', this.onResize.bind(this));
     this.onResize();
@@ -56,6 +57,13 @@ class Renderer {
     this.renderWireframe = !this.renderWireframe;
     this.needsUpdate = true;
   }
+  toggle3D() {
+    // TODO: [Hack] This is just an experimental addendum feature
+    const { center, scale } = this;
+    this.render3D = !this.render3D;
+    this.setScale(scale);
+    this.setCenter(center);
+  }
   render() {
     const { context: GL, meshes, renderWireframe, shader } = this;
     GL.clear(GL.COLOR_BUFFER_BIT);
@@ -69,36 +77,58 @@ class Renderer {
     });
   }
   setCenter(center) {
-    const { context: GL, shader } = this;
+    const { context: GL, shader, scale, render3D } = this;
     vec2.copy(this.center, center);
-    const view = mat4.fromTranslation(
-      mat4.create(),
-      vec3.fromValues(-center[0], -center[1], 0)
-    );
-    GL.uniformMatrix4fv(shader.uniform('view'), false, view);
+    if (render3D) {
+      const view = mat4.lookAt(
+        mat4.create(),
+        vec3.fromValues(center[0], center[1] - (480 * scale), 320 * scale),
+        vec3.fromValues(center[0], center[1] - (220 * scale), 0),
+        vec3.fromValues(0, 0, 1),
+      );
+      GL.uniformMatrix4fv(shader.uniform('view'), false, view);
+    } else {
+      const view = mat4.fromTranslation(
+        mat4.create(),
+        vec3.fromValues(-center[0], -center[1], 0)
+      );
+      GL.uniformMatrix4fv(shader.uniform('view'), false, view);
+    }
     this.updateBounds();
     this.needsUpdate = true;
   }
   setScale(scale) {
-    const { context: GL, shader, viewport, width, height } = this;
+    const { context: GL, shader, viewport, width, height, render3D } = this;
     this.scale = scale;
     vec2.set(viewport, width * 0.5 * scale, height * 0.5 * scale);
-    const projection = mat4.ortho(
-      mat4.create(),
-      viewport[0] * -1.0, viewport[0],
-      viewport[1] * -1.0, viewport[1],
-      0, 1
-    );
-    GL.uniformMatrix4fv(shader.uniform('projection'), false, projection);
+    if (render3D) {
+      const projection = mat4.perspective(
+        mat4.create(),
+        glMatrix.toRadian(60),
+        width / height,
+        0, 512
+      );
+      GL.uniformMatrix4fv(shader.uniform('projection'), false, projection);
+    } else {
+      const projection = mat4.ortho(
+        mat4.create(),
+        viewport[0] * -1.0, viewport[0],
+        viewport[1] * -1.0, viewport[1],
+        0, 1
+      );
+      GL.uniformMatrix4fv(shader.uniform('projection'), false, projection);
+    }
     this.updateBounds();
     this.needsUpdate = true;
   }
   updateBounds() {
+    // TODO: [Incomplete] Pre-calculate fustrum planes if we are rendering 3D
     const { bounds, center, viewport } = this;
     vec2.sub(bounds.min, center, viewport);
     vec2.add(bounds.max, center, viewport);
   }
   isOnBounds(mesh) {
+    // TODO: [Incomplete] Fustrum culling if we are rendering 3D
     const { bounds: { min, max } } = this;
     if (min[0] > mesh.max[0]) return false;
     if (min[1] > mesh.max[1]) return false;
