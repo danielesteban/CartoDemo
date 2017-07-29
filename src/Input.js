@@ -16,8 +16,9 @@ class Input {
     window.addEventListener('wheel', this.onMouseWheel.bind(this));
     window.addEventListener('keydown', this.onKeyDown.bind(this));
   }
-  onMouseDown({ button }, pos) {
-    this.button = button || 0;
+  onMouseDown(e, pos) {
+    e.preventDefault();
+    this.button = e.button || 0;
     this.mouseX = pos[0];
     this.mouseY = pos[1];
   }
@@ -48,13 +49,26 @@ class Input {
   }
   onKeyDown({ keyCode, repeat }) {
     const { renderer } = this;
-    if (repeat) return;
+    const { center, scale } = renderer;
+    const step = 50.0 * scale;
     switch (keyCode) {
       case 87: // W
-        renderer.toggleWireframe();
+        if (!repeat) renderer.toggleWireframe();
         break;
       case 80: // P
-        renderer.toggle3D();
+        if (!repeat) renderer.toggle3D();
+        break;
+      case 38: // UP
+        renderer.setCenter(vec2.add(vec2.create(), center, vec2.fromValues(0, step)));
+        break;
+      case 40: // DOWN
+        renderer.setCenter(vec2.add(vec2.create(), center, vec2.fromValues(0, -step)));
+        break;
+      case 37: // LEFT
+        renderer.setCenter(vec2.add(vec2.create(), center, vec2.fromValues(-step, 0)));
+        break;
+      case 39: // RIGHT
+        renderer.setCenter(vec2.add(vec2.create(), center, vec2.fromValues(step, 0)));
         break;
       default:
     }
