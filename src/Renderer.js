@@ -26,6 +26,7 @@ class Renderer {
     this.viewport = vec2.create();
     this.center = vec2.create();
     this.scale = 0.00001;
+    this.renderWireframe = false;
     this.meshes = [];
     window.addEventListener('resize', this.onResize.bind(this));
     this.onResize();
@@ -51,15 +52,19 @@ class Renderer {
     this.needsUpdate = false;
     this.render();
   }
+  toggleWireframe() {
+    this.renderWireframe = !this.renderWireframe;
+    this.needsUpdate = true;
+  }
   render() {
-    const { context: GL, meshes, shader } = this;
+    const { context: GL, meshes, renderWireframe, shader } = this;
     GL.clear(GL.COLOR_BUFFER_BIT);
     meshes.forEach(({ VAO, count, view, albedo, bounds }) => {
       if (!this.isOnBounds(bounds)) return;
       GL.uniformMatrix4fv(shader.uniform('model'), false, view);
       GL.uniform3fv(shader.uniform('albedo'), albedo);
       GL.extensions.VAO.bindVertexArrayOES(VAO);
-      GL.drawElements(GL.TRIANGLES, count, GL.UNSIGNED_SHORT, 0);
+      GL.drawElements(renderWireframe ? GL.LINE_STRIP : GL.TRIANGLES, count, GL.UNSIGNED_SHORT, 0);
       GL.extensions.VAO.bindVertexArrayOES(null);
     });
   }

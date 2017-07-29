@@ -10,6 +10,7 @@ class Input {
     window.addEventListener('mousemove', this.onMouseMove.bind(this));
     window.addEventListener('mouseup', this.onMouseUp.bind(this));
     window.addEventListener('mousewheel', this.onMouseWheel.bind(this));
+    window.addEventListener('keydown', this.onKeyDown.bind(this));
   }
   onMouseDown({ button, clientX, clientY }) {
     this.button = button;
@@ -36,6 +37,16 @@ class Input {
     const { scale } = renderer;
     const step = wheelDelta > 0 ? 0.5 : 2;
     renderer.setScale(Math.min(Math.max(scale * step, 0.000001), 0.0001));
+  }
+  onKeyDown({ keyCode, repeat }) {
+    const { renderer } = this;
+    if (repeat) return;
+    switch (keyCode) {
+      case 87: // W
+        renderer.toggleWireframe();
+        break;
+      default:
+    }
   }
 }
 
