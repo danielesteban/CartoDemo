@@ -1928,7 +1928,7 @@ eventemitter3@1.x.x:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/eventemitter3/-/eventemitter3-1.2.0.tgz#1c86991d816ad1e504750e73874224ecf3bec508"
 
-events@^1.0.0:
+events@^1.0.0, events@^1.0.2:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/events/-/events-1.1.1.tgz#9ebdb7635ad099c70dcc4c2a1f5004288e8bd924"
 
@@ -4772,6 +4772,12 @@ to-fast-properties@^1.0.1:
 toposort@^1.0.0:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/toposort/-/toposort-1.0.3.tgz#f02cd8a74bd8be2fc0e98611c3bacb95a171869c"
+
+touches@^1.2.2:
+  version "1.2.2"
+  resolved "https://registry.yarnpkg.com/touches/-/touches-1.2.2.tgz#6b9d2223d7d616ba0a1931fe9abd1f56619b16c8"
+  dependencies:
+    events "^1.0.2"
 
 tough-cookie@~2.3.0:
   version "2.3.2"
