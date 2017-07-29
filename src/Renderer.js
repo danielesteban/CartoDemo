@@ -35,9 +35,9 @@ class Renderer {
     this.input = new Input(this);
   }
   onResize() {
-    const { canvas, context: GL, scale } = this;
-    const width = window.innerWidth;
-    const height = window.innerHeight;
+    this.width = window.innerWidth;
+    this.height = window.innerHeight;
+    const { canvas, context: GL, width, height, scale } = this;
     const pixelRatio = window.devicePixelRatio || 1;
     canvas.width = width * pixelRatio;
     canvas.height = height * pixelRatio;
@@ -80,9 +80,9 @@ class Renderer {
     this.needsUpdate = true;
   }
   setScale(scale) {
-    const { context: GL, shader, viewport } = this;
+    const { context: GL, shader, viewport, width, height } = this;
     this.scale = scale;
-    vec2.set(viewport, GL.drawingBufferWidth * 0.5 * scale, GL.drawingBufferHeight * 0.5 * scale);
+    vec2.set(viewport, width * 0.5 * scale, height * 0.5 * scale);
     const projection = mat4.ortho(
       mat4.create(),
       viewport[0] * -1.0, viewport[0],
