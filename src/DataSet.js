@@ -49,7 +49,7 @@ class DataSet {
           const position = polylabel(coordinates);
           const polygon = earcut.flatten(coordinates);
           const vertices = offset(polygon.vertices, position);
-          const indices = earcut(vertices, offset(polygon.holes, position), polygon.dimensions);
+          const indices = earcut(vertices, polygon.holes, polygon.dimensions);
           vec2.min(min, min, position);
           vec2.max(max, max, position);
           // TODO: [Incomplete] This should be a class?
