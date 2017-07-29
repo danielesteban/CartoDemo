@@ -6,7 +6,7 @@ import Status from './Status';
 class DataSet {
   static fetch({ username, query }) {
     // TODO: [Optimization] Parse the WKB binary instead of requesting GeoJSON
-    Status.update('Donwloading dataset...');
+    Status.update('Downloading dataset...');
     return fetch(`https://${username}.carto.com/api/v2/sql?format=GeoJSON&q=${encodeURIComponent(query)}`)
       .then((response) => {
         if (response.status !== 200) throw new Error();
