@@ -30,7 +30,7 @@ class DataSet {
       max: vec2.fromValues(-Number.MAX_VALUE, -Number.MAX_VALUE),
     });
     const offset = (vertices, offset) => vertices.map((coord, index) => (
-      offset[index % 2] - coord
+      coord - offset[index % 2]
     ));
 
     return new Promise((resolve) => {
