@@ -101,8 +101,8 @@ class Renderer {
     if (render3D) {
       const view = mat4.lookAt(
         mat4.create(),
-        vec3.fromValues(center[0], center[1] - (480 * scale), 320 * scale),
-        vec3.fromValues(center[0], center[1] - (220 * scale), 0),
+        vec3.fromValues(center[0], center[1] - (512 * scale), 256 * scale),
+        vec3.fromValues(center[0], center[1] - (320 * scale), 0),
         vec3.fromValues(0, 0, 1),
       );
       GL.uniformMatrix4fv(shader.uniform('view'), false, view);
@@ -127,7 +127,7 @@ class Renderer {
       //       But, like I stated in toggle3D: 3D rendering is only a experimental last minute hack
       const projection = mat4.perspective(
         mat4.create(),
-        glMatrix.toRadian(60),
+        glMatrix.toRadian(70),
         width / height,
         0.0001, 0.1
       );
