@@ -50,7 +50,7 @@ class Renderer {
   onResize() {
     this.width = window.innerWidth;
     this.height = window.innerHeight;
-    const { canvas, context: GL, width, height, scale } = this;
+    const { canvas, context: GL, width, height, center, scale, render3D } = this;
     const pixelRatio = (window.devicePixelRatio || 1) * 2;
     canvas.width = width * pixelRatio;
     canvas.height = height * pixelRatio;
@@ -58,6 +58,7 @@ class Renderer {
     canvas.style.height = `${height}px`;
     GL.viewport(0, 0, GL.drawingBufferWidth, GL.drawingBufferHeight);
     this.setScale(scale);
+    if (render3D) this.setCenter(center);
   }
   onAnimationFrame() {
     requestAnimationFrame(this.onAnimationFrame);
@@ -96,13 +97,13 @@ class Renderer {
     });
   }
   setCenter(center) {
-    const { context: GL, shader, scale, render3D } = this;
+    const { context: GL, shader, render3D, height, scale } = this;
     vec2.copy(this.center, center);
     if (render3D) {
       const view = mat4.lookAt(
         mat4.create(),
-        vec3.fromValues(center[0], center[1] - (512 * scale), 256 * scale),
-        vec3.fromValues(center[0], center[1] - (300 * scale), 0),
+        vec3.fromValues(center[0], center[1] - (height * 0.46 * scale), height * 0.46 * scale),
+        vec3.fromValues(center[0], center[1] - (height * 0.2 * scale), 0),
         vec3.fromValues(0, 0, 1),
       );
       GL.uniformMatrix4fv(shader.uniform('view'), false, view);
