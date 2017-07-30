@@ -93,25 +93,22 @@ class DataSet {
                 height
               );
               const n = normal(v1, v2, v3);
-              vertices.push(v1[0], v1[1], v1[2], n[0], n[1], n[2]);
-              vertices.push(v2[0], v2[1], v2[2], n[0], n[1], n[2]);
-              vertices.push(v3[0], v3[1], v3[2], n[0], n[1], n[2]);
-              vertices.push(v4[0], v4[1], v4[2], n[0], n[1], n[2]);
-              indices.push(index);
-              indices.push(index + 1);
-              indices.push(index + 2);
-              indices.push(index + 2);
-              indices.push(index + 3);
-              indices.push(index);
+              vertices.push(
+                v1[0], v1[1], v1[2], n[0], n[1], n[2],
+                v2[0], v2[1], v2[2], n[0], n[1], n[2],
+                v3[0], v3[1], v3[2], n[0], n[1], n[2],
+                v4[0], v4[1], v4[2], n[0], n[1], n[2]
+              );
+              indices.push(
+                index, index + 1, index + 2,
+                index + 2, index + 3, index
+              );
             }
           }
           const noiseFactor = 64;
           const albedo = rgb(
             Math.min(Math.floor(Math.abs(
-              noise.perlin2(
-                position[0] * noiseFactor,
-                position[1] * noiseFactor
-              )
+              noise.perlin2(position[0] * noiseFactor, position[1] * noiseFactor)
             ) * 359), 359),
             70,
             Math.max(Math.min(properties.numfloors * 4, 100), 40),
@@ -125,7 +122,6 @@ class DataSet {
             bounds,
             count2D,
             position,
-            properties,
           });
         });
         const center = vec2.create();
