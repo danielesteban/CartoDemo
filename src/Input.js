@@ -59,6 +59,8 @@ class Input {
     if (debounce > now) return;
     this.wheelDebounce = now + 100;
     renderer.setScale(Math.min(Math.max(scale * step, 0.000001), 0.0001));
+    // TODO: [Incomplete] While in 2D, this should also update the center
+    //                    with the current mouse position?
     if (render3D) renderer.setCenter(center);
   }
   onKeyDown({ keyCode, repeat }) {
