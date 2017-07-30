@@ -2,6 +2,20 @@ import { vec2 } from 'gl-matrix';
 import touches from 'touches';
 
 class Input {
+  static toggleFullscreen() {
+    const e = document.documentElement;
+    if ((
+      document.fullscreenElement ||
+      document.mozFullScreenElement ||
+      document.webkitFullscreenElement
+    ) === e) {
+      if (document.mozCancelFullScreen) document.mozCancelFullScreen();
+      else if (document.webkitCancelFullScreen) document.webkitCancelFullScreen();
+      else document.cancelFullScreen();
+    } else if (e.mozRequestFullScreen) e.mozRequestFullScreen();
+    else if (e.webkitRequestFullscreen) e.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+    else e.requestFullscreen();
+  }
   constructor(renderer) {
     this.renderer = renderer;
     this.button = -1;
@@ -52,11 +66,14 @@ class Input {
     const { center, scale } = renderer;
     const step = 50.0 * scale;
     switch (keyCode) {
+      case 69: // E
+        if (!repeat) renderer.toggle3D();
+        break;
       case 87: // W
         if (!repeat) renderer.toggleWireframe();
         break;
-      case 80: // P
-        if (!repeat) renderer.toggle3D();
+      case 70: // F
+        if (!repeat) Input.toggleFullscreen();
         break;
       case 38: // UP
         renderer.setCenter(vec2.add(vec2.create(), center, vec2.fromValues(0, step)));

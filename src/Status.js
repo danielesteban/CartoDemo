@@ -4,8 +4,9 @@ class Status {
     document.body.appendChild(this.dom);
     this.help = document.createElement('help');
     [
+      { key: 'E', action: 'Experimental 3D view' },
       { key: 'W', action: 'Wireframe rendering' },
-      { key: 'P', action: 'Experimental 3D view' },
+      { key: 'F', action: 'Go fullscreen' },
     ].forEach(({ key, action }) => {
       const p = document.createElement('p');
       p.innerText = `[${key}] ${action}`;
