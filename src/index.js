@@ -1,22 +1,10 @@
-import { vec3 } from 'gl-matrix';
-import rgb from 'hsv-rgb';
 import DataSet from './DataSet';
 import Renderer from './Renderer';
 import Status from './Status';
 
-// This function lets you monkey-patch each mesh based on it's properties
-// Useful if you want to highlight different types of data from the same dataset
-const preprocess = (mesh, properties) => {
-  const albedo = rgb(255 - Math.min(properties.numfloors * 6, 255), 90, 80);
-  return {
-    ...mesh,
-    albedo: vec3.fromValues(albedo[0] / 255, albedo[1] / 255, albedo[2] / 255),
-  };
-};
-
 const init = ({ meshes, center }) => {
   Renderer.setCenter(center);
-  Renderer.addMeshes(meshes, preprocess);
+  Renderer.addMeshes(meshes);
   Status.update('Drag with your mouse to pan. Scroll to zoom in/out.');
   setTimeout(() => Status.update(false), 3000);
 };

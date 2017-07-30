@@ -8,12 +8,18 @@ class Renderer {
     const hints = {
       alpha: false,
       antialias: true,
+      preserveDrawingBuffer: false,
     };
     this.canvas = document.createElement('canvas');
     document.body.appendChild(this.canvas);
     this.context = this.canvas.getContext('webgl', hints) || this.canvas.getContext('experimental-webgl', hints);
     const GL = this.context;
+    GL.enable(GL.DEPTH_TEST);
+    GL.depthFunc(GL.LESS);
+    GL.enable(GL.CULL_FACE);
+    GL.cullFace(GL.BACK);
     GL.extensions = {
+      EIU: GL.getExtension('OES_element_index_uint'),
       VAO: GL.getExtension('OES_vertex_array_object'),
     };
     GL.clearColor(0.9, 0.9, 0.9, 1);
@@ -28,6 +34,8 @@ class Renderer {
     this.scale = 0.00001;
     this.renderWireframe = false;
     this.render3D = false;
+    this.sunPosition = vec3.fromValues(0.3, -0.6, 0.9);
+    this.setSunPosition(this.sunPosition);
     this.meshes = [];
     window.addEventListener('resize', this.onResize.bind(this));
     this.onResize();
@@ -39,7 +47,7 @@ class Renderer {
     this.width = window.innerWidth;
     this.height = window.innerHeight;
     const { canvas, context: GL, width, height, scale } = this;
-    const pixelRatio = window.devicePixelRatio || 1;
+    const pixelRatio = (window.devicePixelRatio || 1) * 2;
     canvas.width = width * pixelRatio;
     canvas.height = height * pixelRatio;
     canvas.style.width = `${width}px`;
@@ -65,14 +73,19 @@ class Renderer {
     this.setCenter(center);
   }
   render() {
-    const { context: GL, meshes, renderWireframe, shader } = this;
-    GL.clear(GL.COLOR_BUFFER_BIT);
-    meshes.forEach(({ VAO, count, view, albedo, bounds }) => {
+    const { context: GL, meshes, renderWireframe, render3D, shader } = this;
+    GL.clear(GL.COLOR_BUFFER_BIT | GL.DEPTH_BUFFER_BIT);
+    meshes.forEach(({ VAO, view, albedo, bounds, count2D, count3D }) => {
       if (!this.isOnBounds(bounds)) return;
       GL.uniformMatrix4fv(shader.uniform('model'), false, view);
       GL.uniform3fv(shader.uniform('albedo'), albedo);
       GL.extensions.VAO.bindVertexArrayOES(VAO);
-      GL.drawElements(renderWireframe ? GL.LINE_STRIP : GL.TRIANGLES, count, GL.UNSIGNED_SHORT, 0);
+      GL.drawElements(
+        renderWireframe ? GL.LINE_STRIP : GL.TRIANGLES,
+        render3D ? count3D : count2D,
+        GL.UNSIGNED_INT,
+        0
+      );
       GL.extensions.VAO.bindVertexArrayOES(null);
     });
   }
@@ -106,7 +119,7 @@ class Renderer {
         mat4.create(),
         glMatrix.toRadian(60),
         width / height,
-        0, 512
+        0.0001, 0.1
       );
       GL.uniformMatrix4fv(shader.uniform('projection'), false, projection);
     } else {
@@ -114,11 +127,17 @@ class Renderer {
         mat4.create(),
         viewport[0] * -1.0, viewport[0],
         viewport[1] * -1.0, viewport[1],
-        0, 1
+        0, -0.1
       );
       GL.uniformMatrix4fv(shader.uniform('projection'), false, projection);
     }
     this.updateBounds();
+    this.needsUpdate = true;
+  }
+  setSunPosition(position) {
+    const { context: GL, shader } = this;
+    vec3.copy(this.sunPosition, position);
+    GL.uniform3fv(shader.uniform('sunPosition'), position);
     this.needsUpdate = true;
   }
   updateBounds() {
@@ -136,36 +155,42 @@ class Renderer {
     if (max[1] < mesh.min[1]) return false;
     return true;
   }
-  addMeshes(meshes, preprocess) {
-    meshes.forEach(mesh => this.addMesh(mesh, preprocess));
+  addMeshes(meshes) {
+    meshes.forEach(mesh => this.addMesh(mesh));
   }
-  addMesh({ vertices, indices, bounds, position, properties }, preprocess = mesh => mesh) {
+  addMesh({ vertices, indices, position, albedo, bounds, count2D, count3D }) {
     const { context: GL, meshes, shader } = this;
     // TODO: [Incomplete] This should be a class?
     const mesh = {
       VAO: GL.extensions.VAO.createVertexArrayOES(),
       vertices: GL.createBuffer(),
       index: GL.createBuffer(),
-      count: indices.length,
       view: mat4.fromTranslation(
         mat4.create(),
         vec3.fromValues(position[0], position[1], 0)
       ),
-      albedo: vec3.create(),
+      albedo,
       bounds,
+      count2D,
+      count3D,
     };
     GL.extensions.VAO.bindVertexArrayOES(mesh.VAO);
     GL.bindBuffer(GL.ARRAY_BUFFER, mesh.vertices);
     GL.bufferData(GL.ARRAY_BUFFER, vertices, GL.STATIC_DRAW);
     GL.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, mesh.index);
     GL.bufferData(GL.ELEMENT_ARRAY_BUFFER, indices, GL.STATIC_DRAW);
-    GL.vertexAttribPointer(
-      shader.attribute('position'), 2, GL.FLOAT, false,
-      Float32Array.BYTES_PER_ELEMENT * 2, 0
-    );
     GL.enableVertexAttribArray(shader.attribute('position'));
+    GL.vertexAttribPointer(
+      shader.attribute('position'), 3, GL.FLOAT, false,
+      Float32Array.BYTES_PER_ELEMENT * 6, 0
+    );
+    GL.enableVertexAttribArray(shader.attribute('normal'));
+    GL.vertexAttribPointer(
+      shader.attribute('normal'), 3, GL.FLOAT, false,
+      Float32Array.BYTES_PER_ELEMENT * 6, Float32Array.BYTES_PER_ELEMENT * 3
+    );
     GL.extensions.VAO.bindVertexArrayOES(null);
-    meshes.push(preprocess(mesh, properties));
+    meshes.push(mesh);
     this.needsUpdate = true;
   }
 }

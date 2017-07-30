@@ -21,6 +21,7 @@
     "hsv-rgb": "^1.0.0",
     "html-webpack-plugin": "^2.29.0",
     "node-sass": "^4.5.3",
+    "noisejs": "^2.1.0",
     "polylabel": "^1.0.2",
     "postcss-loader": "^2.0.6",
     "raf": "^3.3.2",
