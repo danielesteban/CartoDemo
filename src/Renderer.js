@@ -5,6 +5,7 @@ import Shader from './Shader';
 
 class Renderer {
   constructor() {
+    /* Setup rendering context */
     const hints = {
       alpha: false,
       antialias: true,
@@ -19,29 +20,32 @@ class Renderer {
     GL.enable(GL.CULL_FACE);
     GL.cullFace(GL.BACK);
     GL.extensions = {
-      EIU: GL.getExtension('OES_element_index_uint'),
       VAO: GL.getExtension('OES_vertex_array_object'),
     };
     GL.clearColor(0.9, 0.9, 0.9, 1);
+    /* Compile and setup standard shader */
     this.shader = new Shader(GL, 'standard');
     GL.useProgram(this.shader.program);
+    /* Initialize variables */
     this.bounds = {
       min: vec2.create(),
       max: vec2.create(),
     };
-    this.viewport = vec2.create();
     this.center = vec2.create();
-    this.scale = 0.00001;
+    this.meshes = [];
+    this.input = new Input(this);
     this.renderWireframe = false;
     this.render3D = false;
+    this.scale = 0.00001;
     this.sunPosition = vec3.fromValues(0.3, -0.6, 0.9);
     this.setSunPosition(this.sunPosition);
-    this.meshes = [];
+    this.viewport = vec2.create();
+    /* Handle window resizing */
     window.addEventListener('resize', this.onResize.bind(this));
     this.onResize();
+    /* Start animation loop */
     this.onAnimationFrame = this.onAnimationFrame.bind(this);
     this.onAnimationFrame();
-    this.input = new Input(this);
   }
   onResize() {
     this.width = window.innerWidth;
@@ -77,13 +81,15 @@ class Renderer {
     GL.clear(GL.COLOR_BUFFER_BIT | GL.DEPTH_BUFFER_BIT);
     meshes.forEach(({ VAO, view, albedo, bounds, count2D, count3D }) => {
       if (!this.isOnBounds(bounds)) return;
+      /* Update uniforms */
       GL.uniformMatrix4fv(shader.uniform('model'), false, view);
       GL.uniform3fv(shader.uniform('albedo'), albedo);
+      /* Draw mesh */
       GL.extensions.VAO.bindVertexArrayOES(VAO);
       GL.drawElements(
         renderWireframe ? GL.LINE_STRIP : GL.TRIANGLES,
         render3D ? count3D : count2D,
-        GL.UNSIGNED_INT,
+        GL.UNSIGNED_SHORT,
         0
       );
       GL.extensions.VAO.bindVertexArrayOES(null);
@@ -113,8 +119,12 @@ class Renderer {
   setScale(scale) {
     const { context: GL, shader, viewport, width, height, render3D } = this;
     this.scale = scale;
+    /* Store new viewport dimensions (for bounds calculation) */
     vec2.set(viewport, width * 0.5 * scale, height * 0.5 * scale);
     if (render3D) {
+      // TODO: This should really be updated only while coming from onResize
+      //       Because the aspect ratio is our only variable here...
+      //       But, like I stated in toggle3D: 3D rendering is only a experimental last minute hack
       const projection = mat4.perspective(
         mat4.create(),
         glMatrix.toRadian(60),
@@ -123,12 +133,14 @@ class Renderer {
       );
       GL.uniformMatrix4fv(shader.uniform('projection'), false, projection);
     } else {
+      /* Accommodate the projection to the new scale  */
       const projection = mat4.ortho(
         mat4.create(),
         viewport[0] * -1.0, viewport[0],
         viewport[1] * -1.0, viewport[1],
         0, -0.1
       );
+      /* Tell the GPU about it */
       GL.uniformMatrix4fv(shader.uniform('projection'), false, projection);
     }
     this.updateBounds();
@@ -136,7 +148,9 @@ class Renderer {
   }
   setSunPosition(position) {
     const { context: GL, shader } = this;
+    /* Store the new position */
     vec3.copy(this.sunPosition, position);
+    /* Tell the standard shader about it */
     GL.uniform3fv(shader.uniform('sunPosition'), position);
     this.needsUpdate = true;
   }
@@ -174,11 +188,13 @@ class Renderer {
       count2D,
       count3D,
     };
+    /* Upload vertex data to the GPU and let the garbage collector do it's job */
     GL.extensions.VAO.bindVertexArrayOES(mesh.VAO);
     GL.bindBuffer(GL.ARRAY_BUFFER, mesh.vertices);
     GL.bufferData(GL.ARRAY_BUFFER, vertices, GL.STATIC_DRAW);
     GL.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, mesh.index);
     GL.bufferData(GL.ELEMENT_ARRAY_BUFFER, indices, GL.STATIC_DRAW);
+    /* Store vertex attributes into the VAO */
     GL.enableVertexAttribArray(shader.attribute('position'));
     GL.vertexAttribPointer(
       shader.attribute('position'), 3, GL.FLOAT, false,
@@ -190,6 +206,7 @@ class Renderer {
       Float32Array.BYTES_PER_ELEMENT * 6, Float32Array.BYTES_PER_ELEMENT * 3
     );
     GL.extensions.VAO.bindVertexArrayOES(null);
+    /* Add the mesh to the rendering list and request an update */
     meshes.push(mesh);
     this.needsUpdate = true;
   }

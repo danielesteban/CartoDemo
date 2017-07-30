@@ -66,6 +66,7 @@ class DataSet {
           const height = properties.numfloors * 0.00004;
           const vertices = [];
           for (let i = 0; i < vertices2D.length; i += 2) {
+            /* 2D to 3D + normal map */
             vertices.push(vertices2D[i], vertices2D[i + 1], height, 0, 0, 1);
           }
           if (properties.numfloors) {
@@ -107,16 +108,18 @@ class DataSet {
           }
           const noiseFactor = 64;
           const albedo = rgb(
+            /* Pick a hue using perlin noise */
             Math.min(Math.floor(Math.abs(
               noise.perlin2(position[0] * noiseFactor, position[1] * noiseFactor)
             ) * 359), 359),
             70,
+            /* Highlight the tall buildings */
             Math.max(Math.min(properties.numfloors * 4, 100), 40),
           );
           // TODO: [Incomplete] This should be a class?
           meshes.push({
             vertices: new Float32Array(vertices),
-            indices: new Uint32Array(indices),
+            indices: new Uint16Array(indices),
             albedo: vec3.fromValues(albedo[0] / 255, albedo[1] / 255, albedo[2] / 255),
             count3D: indices.length,
             bounds,
