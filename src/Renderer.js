@@ -102,7 +102,7 @@ class Renderer {
       const view = mat4.lookAt(
         mat4.create(),
         vec3.fromValues(center[0], center[1] - (512 * scale), 256 * scale),
-        vec3.fromValues(center[0], center[1] - (320 * scale), 0),
+        vec3.fromValues(center[0], center[1] - (300 * scale), 0),
         vec3.fromValues(0, 0, 1),
       );
       GL.uniformMatrix4fv(shader.uniform('view'), false, view);
