@@ -4,6 +4,7 @@
   "author": "Daniel Esteban Nombela",
   "scripts": {
     "build": "rimraf dist && cross-env NODE_ENV=production webpack --progress --profile --colors",
+    "lint": "eslint --ext .js src",
     "start": "webpack-dev-server --progress --colors"
   },
   "dependencies": {
