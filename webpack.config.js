@@ -34,7 +34,7 @@ module.exports = {
       /* Transpile JS source */
       {
         test: /\.js$/,
-        exclude: [/node_modules/, /\.generator\.js$/, /\.worker\.js$/],
+        exclude: [/node_modules/, /\.worker\.js$/],
         use: [
           {
             loader: 'babel-loader',
