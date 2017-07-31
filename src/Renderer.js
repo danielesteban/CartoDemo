@@ -178,8 +178,8 @@ class Renderer {
     // TODO: [Incomplete] This should be a class?
     const mesh = {
       VAO: GL.extensions.VAO.createVertexArrayOES(),
-      vertices: GL.createBuffer(),
-      index: GL.createBuffer(),
+      VBO: GL.createBuffer(),
+      EBO: GL.createBuffer(),
       view: mat4.fromTranslation(
         mat4.create(),
         vec3.fromValues(position[0], position[1], 0)
@@ -191,9 +191,9 @@ class Renderer {
     };
     /* Upload vertex data to the GPU and let the garbage collector do it's job */
     GL.extensions.VAO.bindVertexArrayOES(mesh.VAO);
-    GL.bindBuffer(GL.ARRAY_BUFFER, mesh.vertices);
+    GL.bindBuffer(GL.ARRAY_BUFFER, mesh.VBO);
     GL.bufferData(GL.ARRAY_BUFFER, vertices, GL.STATIC_DRAW);
-    GL.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, mesh.index);
+    GL.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, mesh.EBO);
     GL.bufferData(GL.ELEMENT_ARRAY_BUFFER, indices, GL.STATIC_DRAW);
     /* Store vertex attributes into the VAO */
     GL.enableVertexAttribArray(shader.attribute('position'));
