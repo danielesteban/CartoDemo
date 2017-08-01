@@ -15,7 +15,6 @@ class Renderer {
     document.body.appendChild(this.canvas);
     this.context = this.canvas.getContext('webgl', hints) || this.canvas.getContext('experimental-webgl', hints);
     const GL = this.context;
-    GL.enable(GL.DEPTH_TEST);
     GL.depthFunc(GL.LESS);
     GL.enable(GL.CULL_FACE);
     GL.cullFace(GL.BACK);
@@ -40,6 +39,9 @@ class Renderer {
     this.sunPosition = vec3.fromValues(0.3, -0.6, 0.9);
     this.setSunPosition(this.sunPosition);
     this.viewport = vec2.create();
+    this.projection = mat4.create();
+    this.view = mat4.create();
+    this.model = mat4.create();
     /* Handle window resizing */
     window.addEventListener('resize', this.onResize.bind(this));
     this.onResize();
@@ -51,7 +53,7 @@ class Renderer {
     this.width = window.innerWidth;
     this.height = window.innerHeight;
     const { canvas, context: GL, width, height, center, scale, render3D } = this;
-    const pixelRatio = (window.devicePixelRatio || 1) * 2;
+    const pixelRatio = window.devicePixelRatio || 1;
     canvas.width = width * pixelRatio;
     canvas.height = height * pixelRatio;
     canvas.style.width = `${width}px`;
@@ -78,12 +80,22 @@ class Renderer {
     this.setCenter(center);
   }
   render() {
-    const { context: GL, meshes, renderWireframe, render3D, shader } = this;
-    GL.clear(GL.COLOR_BUFFER_BIT | GL.DEPTH_BUFFER_BIT);
-    meshes.forEach(({ VAO, view, albedo, bounds, count2D, count3D }) => {
+    const { context: GL, center, meshes, model, renderWireframe, render3D, shader } = this;
+    if (render3D) {
+      GL.clear(GL.COLOR_BUFFER_BIT | GL.DEPTH_BUFFER_BIT);
+      GL.enable(GL.DEPTH_TEST);
+    } else {
+      GL.clear(GL.COLOR_BUFFER_BIT);
+      GL.disable(GL.DEPTH_TEST);
+    }
+    meshes.forEach(({ VAO, albedo, bounds, count2D, count3D, position }) => {
       if (!this.isOnBounds(bounds)) return;
       /* Update uniforms */
-      GL.uniformMatrix4fv(shader.uniform('model'), false, view);
+      mat4.fromTranslation(
+        model,
+        vec3.fromValues(position[0] - center[0], position[1] - center[1], 0)
+      );
+      GL.uniformMatrix4fv(shader.uniform('model'), false, model);
       GL.uniform3fv(shader.uniform('albedo'), albedo);
       /* Draw mesh */
       GL.extensions.VAO.bindVertexArrayOES(VAO);
@@ -97,28 +109,25 @@ class Renderer {
     });
   }
   setCenter(center) {
-    const { context: GL, shader, render3D, height, scale } = this;
+    const { context: GL, shader, render3D, height, scale, view } = this;
     vec2.copy(this.center, center);
     if (render3D) {
-      const view = mat4.lookAt(
-        mat4.create(),
-        vec3.fromValues(center[0], center[1] - (height * 0.46 * scale), height * 0.46 * scale),
-        vec3.fromValues(center[0], center[1] - (height * 0.2 * scale), 0),
+      mat4.lookAt(
+        view,
+        vec3.fromValues(0, -height * 0.46 * scale, height * 0.46 * scale),
+        vec3.fromValues(0, -height * 0.2 * scale, 0),
         vec3.fromValues(0, 0, 1),
       );
       GL.uniformMatrix4fv(shader.uniform('view'), false, view);
     } else {
-      const view = mat4.fromTranslation(
-        mat4.create(),
-        vec3.fromValues(-center[0], -center[1], 0)
-      );
+      mat4.identity(view);
       GL.uniformMatrix4fv(shader.uniform('view'), false, view);
     }
     this.updateBounds();
     this.needsUpdate = true;
   }
   setScale(scale) {
-    const { context: GL, shader, viewport, width, height, render3D } = this;
+    const { context: GL, shader, viewport, width, height, projection, render3D } = this;
     this.scale = scale;
     /* Store new viewport dimensions (for bounds calculation) */
     vec2.set(viewport, width * 0.5 * scale, height * 0.5 * scale);
@@ -126,8 +135,8 @@ class Renderer {
       // TODO: This should really be updated only while coming from onResize
       //       Because the aspect ratio is our only variable here...
       //       But, like I stated in toggle3D: 3D rendering is only a experimental last minute hack
-      const projection = mat4.perspective(
-        mat4.create(),
+      mat4.perspective(
+        projection,
         glMatrix.toRadian(70),
         width / height,
         0.0001, 0.1
@@ -135,8 +144,8 @@ class Renderer {
       GL.uniformMatrix4fv(shader.uniform('projection'), false, projection);
     } else {
       /* Accommodate the projection to the new scale  */
-      const projection = mat4.ortho(
-        mat4.create(),
+      mat4.ortho(
+        projection,
         viewport[0] * -1.0, viewport[0],
         viewport[1] * -1.0, viewport[1],
         0, -0.1
@@ -180,14 +189,11 @@ class Renderer {
       VAO: GL.extensions.VAO.createVertexArrayOES(),
       VBO: GL.createBuffer(),
       EBO: GL.createBuffer(),
-      view: mat4.fromTranslation(
-        mat4.create(),
-        vec3.fromValues(position[0], position[1], 0)
-      ),
       albedo,
       bounds,
       count2D,
       count3D,
+      position,
     };
     /* Upload vertex data to the GPU and let the garbage collector do it's job */
     GL.extensions.VAO.bindVertexArrayOES(mesh.VAO);

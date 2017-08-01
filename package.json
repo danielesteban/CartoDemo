@@ -21,6 +21,7 @@
     "gl-matrix": "^2.4.0",
     "hsv-rgb": "^1.0.0",
     "html-webpack-plugin": "^2.29.0",
+    "mouse-wheel": "^1.2.0",
     "node-sass": "^4.5.3",
     "noisejs": "^2.1.0",
     "polylabel": "^1.0.2",

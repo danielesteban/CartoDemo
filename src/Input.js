@@ -1,4 +1,5 @@
 import { vec2 } from 'gl-matrix';
+import mouseWheel from 'mouse-wheel';
 import touches from 'touches';
 
 class Input {
@@ -21,13 +22,11 @@ class Input {
     this.button = -1;
     this.mouseX = -1;
     this.mouseY = -1;
-    this.wheelDebounce = 0;
     touches(window, { filtered: true })
       .on('start', this.onMouseDown.bind(this))
       .on('move', this.onMouseMove.bind(this))
       .on('end', this.onMouseUp.bind(this));
-    window.addEventListener('mousewheel', this.onMouseWheel.bind(this));
-    window.addEventListener('wheel', this.onMouseWheel.bind(this));
+    mouseWheel(window, this.onMouseWheel.bind(this), true);
     window.addEventListener('keydown', this.onKeyDown.bind(this));
   }
   onMouseDown(e, pos) {
@@ -51,14 +50,10 @@ class Input {
   onMouseUp() {
     this.button = -1;
   }
-  onMouseWheel({ deltaY }) {
-    const { renderer, wheelDebounce: debounce } = this;
+  onMouseWheel(dX, dY) {
+    const { renderer } = this;
     const { center, scale, render3D } = renderer;
-    const now = Date.now();
-    const step = deltaY > 0 ? 2 : 0.5;
-    if (debounce > now) return;
-    this.wheelDebounce = now + 100;
-    renderer.setScale(Math.min(Math.max(scale * step, 0.000001), 0.0001));
+    renderer.setScale(Math.min(Math.max(scale + (dY * 0.001 * scale), 0.000001), 0.00006));
     // TODO: [Incomplete] While in 2D, this should also update the center
     //                    with the current mouse position?
     if (render3D) renderer.setCenter(center);
