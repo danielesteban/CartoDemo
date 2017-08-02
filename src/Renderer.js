@@ -42,6 +42,7 @@ class Renderer {
     this.projection = mat4.create();
     this.view = mat4.create();
     this.model = mat4.create();
+    this.modelPosition = vec3.create();
     /* Handle window resizing */
     window.addEventListener('resize', this.onResize.bind(this));
     this.onResize();
@@ -80,7 +81,16 @@ class Renderer {
     this.setCenter(center);
   }
   render() {
-    const { context: GL, center, meshes, model, renderWireframe, render3D, shader } = this;
+    const {
+      context: GL,
+      center,
+      meshes,
+      model,
+      modelPosition,
+      renderWireframe,
+      render3D,
+      shader,
+    } = this;
     if (render3D) {
       GL.clear(GL.COLOR_BUFFER_BIT | GL.DEPTH_BUFFER_BIT);
       GL.enable(GL.DEPTH_TEST);
@@ -91,10 +101,8 @@ class Renderer {
     meshes.forEach(({ VAO, albedo, bounds, count2D, count3D, position }) => {
       if (!this.isOnBounds(bounds)) return;
       /* Update uniforms */
-      mat4.fromTranslation(
-        model,
-        vec3.fromValues(position[0] - center[0], position[1] - center[1], 0)
-      );
+      vec3.set(modelPosition, position[0] - center[0], position[1] - center[1], 0);
+      mat4.fromTranslation(model, modelPosition);
       GL.uniformMatrix4fv(shader.uniform('model'), false, model);
       GL.uniform3fv(shader.uniform('albedo'), albedo);
       /* Draw mesh */
