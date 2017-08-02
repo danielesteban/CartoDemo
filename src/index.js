@@ -3,7 +3,7 @@ import Renderer from './Renderer';
 import Status from './Status';
 
 const username = 'rambo-test';
-const query = 'SELECT * FROM mnmappluto ORDER BY numfloors';
+const query = 'SELECT * FROM mnmappluto';
 
 // TODO: [Optimization]
 // Fetch only the data needed for the current viewport using an envelope.
