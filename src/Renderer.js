@@ -43,6 +43,9 @@ class Renderer {
     this.view = mat4.create();
     this.model = mat4.create();
     this.modelPosition = vec3.create();
+    this.needsUpdate = false;
+    this.needsProjectionUpdate = false;
+    this.needsViewUpdate = false;
     /* Handle window resizing */
     window.addEventListener('resize', this.onResize.bind(this));
     this.onResize();
@@ -67,6 +70,14 @@ class Renderer {
     requestAnimationFrame(this.onAnimationFrame);
     if (!this.needsUpdate) return;
     this.needsUpdate = false;
+    if (this.needsProjectionUpdate) {
+      this.context.uniformMatrix4fv(this.shader.uniform('projection'), false, this.projection);
+      this.needsProjectionUpdate = false;
+    }
+    if (this.needsViewUpdate) {
+      this.context.uniformMatrix4fv(this.shader.uniform('view'), false, this.view);
+      this.needsViewUpdate = false;
+    }
     this.render();
   }
   toggleWireframe() {
@@ -75,10 +86,11 @@ class Renderer {
   }
   toggle3D() {
     // TODO: [Hack] This is just an experimental addendum feature
-    const { center, scale } = this;
+    const { center, scale, sunPosition } = this;
     this.render3D = !this.render3D;
     this.setScale(scale);
     this.setCenter(center);
+    this.setSunPosition(sunPosition);
   }
   render() {
     const {
@@ -117,7 +129,7 @@ class Renderer {
     });
   }
   setCenter(center) {
-    const { context: GL, shader, render3D, height, scale, view } = this;
+    const { render3D, height, scale, view } = this;
     vec2.copy(this.center, center);
     if (render3D) {
       mat4.lookAt(
@@ -126,16 +138,15 @@ class Renderer {
         vec3.fromValues(0, -height * 0.2 * scale, 0),
         vec3.fromValues(0, 0, 1),
       );
-      GL.uniformMatrix4fv(shader.uniform('view'), false, view);
     } else {
       mat4.identity(view);
-      GL.uniformMatrix4fv(shader.uniform('view'), false, view);
     }
     this.updateBounds();
+    this.needsViewUpdate = true;
     this.needsUpdate = true;
   }
   setScale(scale) {
-    const { context: GL, shader, viewport, width, height, projection, render3D } = this;
+    const { viewport, width, height, projection, render3D } = this;
     this.scale = scale;
     /* Store new viewport dimensions (for bounds calculation) */
     vec2.set(viewport, width * 0.5 * scale, height * 0.5 * scale);
@@ -149,7 +160,6 @@ class Renderer {
         width / height,
         0.0001, 0.1
       );
-      GL.uniformMatrix4fv(shader.uniform('projection'), false, projection);
     } else {
       /* Accommodate the projection to the new scale  */
       mat4.ortho(
@@ -158,18 +168,23 @@ class Renderer {
         viewport[1] * -1.0, viewport[1],
         0, -0.1
       );
-      /* Tell the GPU about it */
-      GL.uniformMatrix4fv(shader.uniform('projection'), false, projection);
     }
     this.updateBounds();
+    this.needsProjectionUpdate = true;
     this.needsUpdate = true;
   }
   setSunPosition(position) {
-    const { context: GL, shader } = this;
+    const { context: GL, shader, render3D } = this;
     /* Store the new position */
     vec3.copy(this.sunPosition, position);
     /* Tell the standard shader about it */
     GL.uniform3fv(shader.uniform('sunPosition'), position);
+    if (render3D) {
+      GL.uniform1f(shader.uniform('diffuseFactor'), -1);
+    } else {
+      /* 2D diffuse pre-calculation */
+      GL.uniform1f(shader.uniform('diffuseFactor'), Math.max(vec3.dot(vec3.fromValues(0, 0, 1), position), 0.3));
+    }
     this.needsUpdate = true;
   }
   updateBounds() {
