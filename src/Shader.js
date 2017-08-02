@@ -41,12 +41,16 @@ class Shader {
   }
   attribute(id) {
     const { context: GL } = this;
-    if (!this.attributes[id]) this.attributes[id] = GL.getAttribLocation(this.program, id);
+    if (this.attributes[id] === undefined) {
+      this.attributes[id] = GL.getAttribLocation(this.program, id);
+    }
     return this.attributes[id];
   }
   uniform(id) {
     const { context: GL } = this;
-    if (!this.uniforms[id]) this.uniforms[id] = GL.getUniformLocation(this.program, id);
+    if (this.uniforms[id] === undefined) {
+      this.uniforms[id] = GL.getUniformLocation(this.program, id);
+    }
     return this.uniforms[id];
   }
 }

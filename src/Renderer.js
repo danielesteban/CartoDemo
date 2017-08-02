@@ -41,8 +41,7 @@ class Renderer {
     this.viewport = vec2.create();
     this.projection = mat4.create();
     this.view = mat4.create();
-    this.model = mat4.create();
-    this.modelPosition = vec3.create();
+    this.model = vec2.create();
     this.needsUpdate = false;
     this.needsProjectionUpdate = false;
     this.needsViewUpdate = false;
@@ -98,7 +97,6 @@ class Renderer {
       center,
       meshes,
       model,
-      modelPosition,
       renderWireframe,
       render3D,
       shader,
@@ -113,9 +111,8 @@ class Renderer {
     meshes.forEach(({ VAO, albedo, bounds, count2D, count3D, position }) => {
       if (!this.isOnBounds(bounds)) return;
       /* Update uniforms */
-      vec3.set(modelPosition, position[0] - center[0], position[1] - center[1], 0);
-      mat4.fromTranslation(model, modelPosition);
-      GL.uniformMatrix4fv(shader.uniform('model'), false, model);
+      vec2.set(model, position[0] - center[0], position[1] - center[1]);
+      GL.uniform2fv(shader.uniform('model'), model);
       GL.uniform3fv(shader.uniform('albedo'), albedo);
       /* Draw mesh */
       GL.extensions.VAO.bindVertexArrayOES(VAO);

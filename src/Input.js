@@ -53,7 +53,7 @@ class Input {
   onMouseWheel(dX, dY) {
     const { renderer } = this;
     const { center, scale, render3D } = renderer;
-    renderer.setScale(Math.min(Math.max(scale + (dY * 0.001 * scale), 0.000001), 0.00006));
+    renderer.setScale(Math.min(Math.max(scale + (dY * 0.001 * scale), 0.000001), 0.00005));
     // TODO: [Incomplete] While in 2D, this should also update the center
     //                    with the current mouse position?
     if (render3D) renderer.setCenter(center);
