@@ -1,6 +1,6 @@
 precision mediump float;
 varying vec3 fragNormal;
-uniform vec3 albedo;
+varying vec3 fragColor;
 uniform vec3 sunPosition;
 uniform float diffuseFactor;
 
@@ -13,5 +13,5 @@ void main(void) {
   } else {
     diffuse = diffuseFactor;
   }
-  gl_FragColor = vec4(albedo * diffuse, 1.0);
+  gl_FragColor = vec4(fragColor * diffuse, 1.0);
 }

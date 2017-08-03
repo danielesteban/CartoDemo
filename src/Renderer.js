@@ -108,12 +108,11 @@ class Renderer {
       GL.clear(GL.COLOR_BUFFER_BIT);
       GL.disable(GL.DEPTH_TEST);
     }
-    meshes.forEach(({ VAO, albedo, bounds, count2D, count3D, position }) => {
+    meshes.forEach(({ VAO, bounds, count2D, count3D, position }) => {
       if (!this.isOnBounds(bounds)) return;
       /* Update uniforms */
       vec2.set(model, position[0] - center[0], position[1] - center[1]);
       GL.uniform2fv(shader.uniform('model'), model);
-      GL.uniform3fv(shader.uniform('albedo'), albedo);
       /* Draw mesh */
       GL.extensions.VAO.bindVertexArrayOES(VAO);
       GL.drawElements(
@@ -202,14 +201,13 @@ class Renderer {
   addMeshes(meshes) {
     meshes.forEach(mesh => this.addMesh(mesh));
   }
-  addMesh({ vertices, indices, position, albedo, bounds, count2D, count3D }) {
+  addMesh({ vertices, indices, position, bounds, count2D, count3D }) {
     const { context: GL, meshes, shader } = this;
     // TODO: [Incomplete] This should be a class?
     const mesh = {
       VAO: GL.extensions.VAO.createVertexArrayOES(),
       VBO: GL.createBuffer(),
       EBO: GL.createBuffer(),
-      albedo,
       bounds,
       count2D,
       count3D,
@@ -225,12 +223,17 @@ class Renderer {
     GL.enableVertexAttribArray(shader.attribute('position'));
     GL.vertexAttribPointer(
       shader.attribute('position'), 3, GL.FLOAT, false,
-      Float32Array.BYTES_PER_ELEMENT * 6, 0
+      Float32Array.BYTES_PER_ELEMENT * 9, 0
     );
     GL.enableVertexAttribArray(shader.attribute('normal'));
     GL.vertexAttribPointer(
       shader.attribute('normal'), 3, GL.FLOAT, false,
-      Float32Array.BYTES_PER_ELEMENT * 6, Float32Array.BYTES_PER_ELEMENT * 3
+      Float32Array.BYTES_PER_ELEMENT * 9, Float32Array.BYTES_PER_ELEMENT * 3
+    );
+    GL.enableVertexAttribArray(shader.attribute('color'));
+    GL.vertexAttribPointer(
+      shader.attribute('color'), 3, GL.FLOAT, false,
+      Float32Array.BYTES_PER_ELEMENT * 9, Float32Array.BYTES_PER_ELEMENT * 6
     );
     GL.extensions.VAO.bindVertexArrayOES(null);
     /* Add the mesh to the rendering list and request an update */
